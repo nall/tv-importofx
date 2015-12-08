@@ -34,6 +34,7 @@ import calendar
 import ConfigParser
 import datetime
 import getpass
+import json
 import keyring
 import logging
 import ofxclient
@@ -88,19 +89,23 @@ def parse_cmdline_args():
   parser = argparse.ArgumentParser(description='Tradervue OFX Importer')
   parser.add_argument('action', type = str, choices = ['set_password', 'delete_password', 'import'], help = 'The action to perform')
   parser.add_argument('--account', '-a', type = str, help = 'Use the specified ofxclient account ID (the local_id field from ofxclient.ini). Required for imports.')
+  parser.add_argument('--file', '-f', type = str, dest = 'ofxfile', metavar = 'OFXFILE', help = 'Use the specified ofxclient account ID (the local_id field from ofxclient.ini). Required for imports.')
   parser.add_argument('--username', '-u', type = str, default = os.environ['USER'], help = 'Tradervue username if different from $USER (default: %(default)s)')
   parser.add_argument('--days', type = int, default = 1, help = 'The number of days of OFX data to download (default: %(default)s)')
   parser.add_argument('--tag', dest = 'tags', type = str, action = 'append', help = 'Add the specified tag to the imported executions. May be specified multiple times.')
   parser.add_argument('--account_tag', type = str, help = 'Use the specified tag as the account tag during import. This tag is automatically added to the trade as well')
   parser.add_argument('--allow_duplicates', action = 'store_true', help = 'disable Tradervue\'s automatic duplicate-detection when importing this data')
   parser.add_argument('--overlay_commissions', action = 'store_true', help = 'No new trades will be created and existing trades will be updated with commission and fee data')
+  parser.add_argument('--noimport', action = 'store_true', help = 'Do not actually import trades into Tradervue. Parse the OFX and dump the JSON for the Tradervue executions')
   parser.add_argument('--debug', action = 'store_true', help = 'Enable verbose debugging messages')
   parser.add_argument('--debug_http', action = 'store_true', help = 'Enable verbose HTTP request/response debugging messages')
 
   args = parser.parse_args()
 
-  if args.action == 'import' and args.account is None:
-    parser.error("--account is a required argument for the import action")
+  if args.action == 'import' and (args.account is None and args.ofxfile is None):
+    parser.error("--account or --file is required for the import action")
+  if args.ofxfile is not None and not os.path.exists(args.ofxfile):
+    parser.error("No such file for --file: %s" % (args.ofxfile))
 
   if args.debug_http:
     args.debug = True
@@ -151,21 +156,24 @@ def main():
     LOG.error("Unable to determine Tradervue credentials. Exiting.")
     return 1
 
-  config = ofxclient.config.OfxConfig()
-  acct = config.account(args.account)
-  LOG.info("Downloading OFX for %s from %s..." % (acct.number_masked(), acct.institution.description)) 
-  download = acct.download(days = args.days)
-  ofxtext = download.read()
+  ofx = None
+  if args.account:
+    config = ofxclient.config.OfxConfig()
+    acct = config.account(args.account)
+    LOG.info("Downloading OFX for %s from %s..." % (acct.number_masked(), acct.institution.description)) 
+    download = acct.download(days = args.days)
+    ofxtext = download.read()
+
+    with tempfile.NamedTemporaryFile() as fh:
+      fh.write(ofxtext)
+      fh.flush()
+      os.fsync(fh)
+      ofx = ofxparse.OfxParser.parse(file(fh.name))
+      fh.close()
+  else:
+    ofx = ofxparse.OfxParser.parse(file(args.ofxfile))
 
   LOG.info("Processing OFX data into Tradervue executions")
-  ofx = None
-  with tempfile.NamedTemporaryFile() as fh:
-    fh.write(ofxtext)
-    fh.flush()
-    os.fsync(fh)
-    ofx = ofxparse.OfxParser.parse(file(fh.name))
-    fh.close()
-
   executions = []
   for t in ofx.account.statement.transactions:
     if t.type == ofxparse.ofxparse.InvestmentTransaction.Income:
@@ -181,7 +189,12 @@ def main():
     daystring = 'day' if args.days == 1 else 'days'
     LOG.info("No executions generated from %d %s of OFX transactions" % (args.days, daystring))
     return 0
-   
+
+  if args.noimport:
+    for line in json.dumps(executions, indent = 1).split('\n'):
+      LOG.info(line)
+    return 0
+
   LOG.info("Importing %d executions into Tradervue" % (len(executions)))
   tv = tradervue.Tradervue(credentials[0], credentials[1], TRADERVUE_USERAGENT, verbose_http = args.debug_http)
   result = tv.import_executions(executions, args.account_tag, args.tags, allow_duplicates = args.allow_duplicates, overlay_commissions = args.overlay_commissions, wait_for_completion = True)

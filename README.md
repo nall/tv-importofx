@@ -45,6 +45,8 @@ This will prompt you for the password for <username> which is stored in your OS'
 
     tv-importofx delete_password --username <username>
 
+You can add credentials for multiple usernames. There is no way currently to provide a list of existing usernames in the keyring.
+
 Once you've setup your OFX account(s) and Tradervue credentials, you're ready to start importing executions.
 
 ## Importing
@@ -52,13 +54,13 @@ Once you've setup your OFX account(s) and Tradervue credentials, you're ready to
 To import executions, you'll need the following:
 
    * Tradervue username (with valid credentials in the keyring as setup above)
-   * ofxclient local\_id field for the account you're importing from. This can be found in `$HOME/ofxclient.ini`.
+   * ofxclient `local_id` field for the account you're importing from. This can be found in `$HOME/ofxclient.ini`.
       * Alternately, you can give the tool a previously downloaded OFX file and use `--file` instead of `--account`.
    * Number of days of transactions to import
 
 Once you have the above, you can import with the following command (--days defaults to 1):
 
-    tv-importofx import --username <tradervue_username> --account <ofxclient_account_id> [--days <num_days_to_import>]
+    tv-importofx import --username <tradervue_username> --account <ofxclient_account_id> [--days <num_days>]
 
 #### Additional Import Options
 There are a few (rarely used?) options available in the Tradervue import API that are exposed via the command line. To enable these options, specify the appropriate command line argument as described below. For more information on these options, see the Tradervue [import API](https://github.com/tradervue/api-docs/blob/master/imports.md).

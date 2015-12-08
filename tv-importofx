@@ -46,7 +46,10 @@ import pytz
 import re
 import sys
 import tempfile
-import tradervue
+
+# Pull in the py-tradervue submodule
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), 'py-tradervue'))
+from tradervue import TradervueLogFormatter, Tradervue
 
 from colorama import Fore, Back, Style
 
@@ -76,7 +79,7 @@ def setup_logging(debug = False):
   LOG = logging.getLogger()
   LOG.setLevel(logging.DEBUG if debug else logging.INFO)
   console = logging.StreamHandler()
-  console.setFormatter(tradervue.TradervueLogFormatter())
+  console.setFormatter(TradervueLogFormatter())
   LOG.addHandler(console)
   LOG.addHandler(ErrorCountingHandler())
 
@@ -196,7 +199,7 @@ def main():
     return 0
 
   LOG.info("Importing %d executions into Tradervue" % (len(executions)))
-  tv = tradervue.Tradervue(credentials[0], credentials[1], TRADERVUE_USERAGENT, verbose_http = args.debug_http)
+  tv = Tradervue(credentials[0], credentials[1], TRADERVUE_USERAGENT, verbose_http = args.debug_http)
   result = tv.import_executions(executions, args.account_tag, args.tags, allow_duplicates = args.allow_duplicates, overlay_commissions = args.overlay_commissions, wait_for_completion = True)
 
   if result is None:

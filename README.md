@@ -10,18 +10,18 @@ The utility uses [py-tradervue](https://github.com/nall/py-tradervue), a Python 
 
 Note that you currently need the development version of ofxparse. Further, if you'll be importing option transactions, you need to install a fork of that version with option support:
 
-### Installing py-tradervue
+##### Installing py-tradervue
     FIXME
 
-### Installing ofxclient
+##### Installing ofxclient
 
     pip install ofxclient
 
-### Installing ofxparse (official development version)
+##### Installing ofxparse (official development version)
 
     pip install git+https://github.com/jseutter/ofxparse
 
-### Installing ofxparse (fork with options support)
+##### Installing ofxparse (fork with options support)
 
     pip install git+https://github.com/nall/ofxparse
 

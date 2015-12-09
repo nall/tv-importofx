@@ -49,7 +49,7 @@ import tempfile
 
 # Pull in the py-tradervue submodule
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), 'py-tradervue'))
-from tradervue import TradervueLogFormatter, Tradervue
+from tradervue.tradervue import TradervueLogFormatter, Tradervue
 
 from colorama import Fore, Back, Style
 

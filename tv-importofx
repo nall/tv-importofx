@@ -55,7 +55,7 @@ from colorama import Fore, Back, Style
 
 LOG = None
 
-TRADERVUE_KEYRING_NAME = 'tv-importofx'
+TRADERVUE_KEYRING_NAME = 'tradervue'
 TRADERVUE_USERAGENT = 'tv-importofx (jon.nall@gmail.com)'
 
 # Regex to parse option format SYMXXXYYMMDD[CP]DDDDDFFF

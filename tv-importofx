@@ -274,10 +274,14 @@ def _fix_tradedate_generic(dt):
 def _fix_tradedate_for_ox(dt):
   return EASTERN.localize(dt)
 
+def _fix_tradedate_for_tda(dt):
+  return EASTERN.localize(dt)
+
 def _fix_tradedate_if_needed(dt, institution):
 
   # Map of ORG/FID combos to date fixing functions
-  date_fixers = { ('10876', '10876'): _fix_tradedate_for_ox }
+  date_fixers = { ('10876', '10876')        : _fix_tradedate_for_ox,
+                  ('ameritrade.org', '5024'): _fix_tradedate_for_tda, }
   
   fn = _fix_tradedate_generic
   orgfid = (institution.organization, institution.fid)

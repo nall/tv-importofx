@@ -70,6 +70,7 @@ I've tested the brokerages below, though any brokerage supported by ofxclient ([
 
    * Schwab
    * OptionsXpress
+   * TD Ameritrade
 
 If you are able to successfully import trades from your brokerage, let me know and I'll add it to this list. 
 
